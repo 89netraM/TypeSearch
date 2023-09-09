@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO.Compression;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 using System.Xml;
@@ -30,11 +31,12 @@ public class Class1
 			logger,
 			CancellationToken.None);
 		var libs = await result.PackageReader.GetLibItemsAsync(CancellationToken.None);
-		var types = libs.First().Items.First(p => Path.GetExtension(p) == ".xml");
+		var types = libs.Skip(3).First().Items.First(p => Path.GetExtension(p) == ".dll");
 		var zip = new ZipArchive(result.PackageStream);
-		var typesFile = zip.GetEntry(types) ?? throw new Exception();
-		await using var typesStream = typesFile.Open();
-
-		var documentation = await Documentation.Documentation.ReadFromAsync(typesStream);
+		var assemblyFile = zip.GetEntry(types) ?? throw new Exception();
+		await using var assemblyStream = assemblyFile.Open();
+		using var ms = new MemoryStream();
+		await assemblyStream.CopyToAsync(ms);
+		var assembly = Assembly.Load(ms.ToArray());
 	}
 }
