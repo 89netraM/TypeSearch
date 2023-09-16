@@ -1,24 +1,21 @@
 ﻿using System;
 using System.Linq;
 using System.Text.Json;
-using Mono.Cecil;
-using TypeSearch.Cecil;
-using TypeSearch.CLI;
-using TypeSearch.Domain;
 
-var formulas = new[] { typeof(string), typeof(Enumerable) }
-	.Select(t => AssemblyDefinition.ReadAssembly(t.Assembly.Location))
-	.SelectMany(TypeSearch.Cecil.Search.BuildFormulas)
+var assemblies = new[] { typeof(string), typeof(Enumerable) }
+	.Select(t => t.Assembly)
 	.ToArray();
+
+var formulas = TypeSearch.Reflection.Search.BuildFormulas(assemblies);
 
 var results = TypeSearch.Domain
 	.Search
 	.Lookup(
-		formulas, 
-		new[] { "String", "Char" }
-			.Select(text => new DumbType(text))
+		formulas,
+		new[] { "char", "int" }
+			.Select(q => TypeSearch.Reflection.Search.TypeFromQuery(assemblies, q))
 			.ToArray(),
-		new DumbType("Boolean"));
+		TypeSearch.Reflection.Search.TypeFromQuery(assemblies, "string"));
 
 foreach (var result in results)
 {
