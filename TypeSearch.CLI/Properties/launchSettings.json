@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "TypeSearch.CLI": {
+      "commandName": "Project",
+      "commandLineArgs": "string int"
+    }
+  }
+}
