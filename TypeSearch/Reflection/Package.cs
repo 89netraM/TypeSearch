@@ -94,6 +94,15 @@ public class Package : IDisposable
 			var declaringType = new ReflectionType(property.DeclaringType!);
 			var name = property.Name;
 			var propertyType = new ReflectionType(property.PropertyType);
+			
+			if (property.GetIndexParameters() is { Length: > 0 } indexParaemters)
+			{
+				var parameters = indexParaemters
+					.Select(p => new ReflectionType(p.ParameterType))
+					.ToArray();
+				
+				return new IndexProperty(declaringType, name, parameters, propertyType);
+			}
 
 			if (property.GetMethod!.IsStatic)
 			{
