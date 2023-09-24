@@ -5,14 +5,19 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using NuGet.Protocol;
 using NuGet.Protocol.Core.Types;
+using Serilog;
+using Serilog.Formatting.Compact;
 using TypeSearch.Domain;
 using TypeSearch.NuGet;
 
 var services = new ServiceCollection();
-services.AddLogging(c => c.AddConsole().SetMinimumLevel(LogLevel.Trace));
+services.AddLogging(c => c.AddSerilog(
+	new LoggerConfiguration()
+		.WriteTo.Console(new RenderedCompactJsonFormatter())
+		.CreateLogger()));
 services.AddSingleton<SourceCacheContext>();
 services.AddSingleton(Repository.Factory.GetCoreV3("https://api.nuget.org/v3/index.json"));
-services.AddSingleton<NuGetDownloadService>();
+services.AddSingleton<NuGetService>();
 services.AddSingleton<PackageService>();
 
 var provider = services.BuildServiceProvider();
