@@ -1,6 +1,8 @@
 ﻿using System;
+using System.IO;
 using System.Linq;
 using System.Threading;
+using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using NuGet.Protocol;
@@ -9,6 +11,7 @@ using Serilog;
 using Serilog.Formatting.Compact;
 using TypeSearch.Domain;
 using TypeSearch.NuGet;
+using TypeSearch.Reflection;
 
 var services = new ServiceCollection();
 services.AddLogging(c => c.AddSerilog(
@@ -25,19 +28,7 @@ var provider = services.BuildServiceProvider();
 var logger = provider.GetRequiredService<ILogger<Program>>();
 var packageService = provider.GetRequiredService<PackageService>();
 
-if (args[0].Split("/") is not [var name, var versionString])
-{
-	logger.LogWarning("First argument didn't match \"<Package.Name>/<Version>\" format, was \"{Args0}\"", args[0]);
-	return;
-}
-
-if (!Version.TryParse(versionString, out var version))
-{
-	logger.LogWarning("Version string \"{VersionString}\" was not a valid version", versionString);
-	return;
-}
-
-var package = await packageService.FetchPackage(name, version, CancellationToken.None);
+var package = await LoadPackageFromArgument(args[0], CancellationToken.None);
 if (package is null)
 {
 	logger.LogWarning("Package not found");
@@ -56,4 +47,25 @@ var results = Search.Lookup(
 foreach (var result in results)
 {
 	logger.LogInformation("Found formula: {DocumentationIdentifier}", result.DocumentationIdentifier);
+}
+
+async Task<Package?> LoadPackageFromArgument(string arg, CancellationToken ct)
+{
+	if (Path.Exists(arg))
+	{
+		logger.LogDebug("Loading package from file {FilePath}", arg);
+		var package = new Package(Path.GetFileNameWithoutExtension(arg));
+		using var fileStream = File.OpenRead(arg);
+		package.AddAssembly(fileStream);
+		return package;
+	}
+
+	if (arg.Split("/") is [var name, var versionString] && Version.TryParse(versionString, out var version))
+	{
+		logger.LogDebug("Loading package from NuGet {Name}/{Version}", name, version);
+		return await packageService.FetchPackage(name, version, ct);
+	}
+
+	logger.LogWarning("First argument should either be a path to a .DLL or a NuGet package identifier (\"<Package.Name>/<Version>\"), was \"{Args0}\"", args[0]);
+	return null;
 }
