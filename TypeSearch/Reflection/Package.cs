@@ -15,25 +15,24 @@ public class Package : IDisposable
 	private const BindingFlags PublicDeclaredMembers =
 		BindingFlags.Instance | BindingFlags.Static | BindingFlags.Public | BindingFlags.DeclaredOnly;
 
-	public static Package Load(string name, Stream stream)
-	{
-		var context = new AssemblyLoadContext(name, true);
-		context.LoadFromStream(stream);
-		return new Package(context);
-	}
-
 	private readonly AssemblyLoadContext context;
 
-	public IReadOnlyCollection<IFormula> Formulas { get; }
+	private List<IFormula> formulas = new List<IFormula>();
+	public IReadOnlyCollection<IFormula> Formulas => formulas;
 
-	private Package(AssemblyLoadContext context)
+	public Package(string name)
 	{
-		this.context = context;
+		context = new AssemblyLoadContext(name, true);
+	}
 
-		Formulas = BuildFormulas(context.Assemblies).ToArray();
+	public void AddAssembly(Stream stream)
+	{
+		var assembly = context.LoadFromStream(stream);
 
-		static IEnumerable<IFormula> BuildFormulas(IEnumerable<Assembly> assemblies) =>
-			assemblies.SelectMany(assembly => assembly
+		formulas.AddRange(BuildFormulas(assembly));
+
+		static IEnumerable<IFormula> BuildFormulas(Assembly assembly) =>
+			assembly
 				.Modules
 				.SelectMany(module => module
 					.GetTypes()
@@ -46,7 +45,7 @@ public class Package : IDisposable
 						.Concat(type.GetConstructors(PublicDeclaredMembers & ~BindingFlags.DeclaredOnly)
 							.Select(ConstructorToFormula))
 						.Concat(type.GetProperties(PublicDeclaredMembers)
-							.Select(PropertyToFormula)))));
+							.Select(PropertyToFormula))));
 
 		static IFormula FieldToFormula(FieldInfo field)
 		{
@@ -95,7 +94,7 @@ public class Package : IDisposable
 			var name = property.Name;
 			var propertyType = new ReflectionType(property.PropertyType);
 
-			if (property.GetMethod!.IsStatic)
+			if (property.GetMethod?.IsStatic is true)
 			{
 				return new StaticProperty(declaringType, name, propertyType);
 			}
