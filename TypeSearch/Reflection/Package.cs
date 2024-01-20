@@ -1,5 +1,4 @@
 ﻿using System;
-using System.CodeDom;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -114,9 +113,11 @@ public class Package : IDisposable
 
 	public IType TypeFromQuery(string query)
 	{
+		using var provider = new CSharpCodeProvider();
+
 		return new SearchType(
 			query,
-			context.Assemblies
+			context.Assemblies.Concat(AppDomain.CurrentDomain.GetAssemblies())
 				.SelectMany(assembly => assembly
 					.Modules
 					.SelectMany(module => module
@@ -124,13 +125,9 @@ public class Package : IDisposable
 						.Where(type => type.IsPublic && TypeMatchesQuery(type, query))))
 				.ToArray());
 
-		static bool TypeMatchesQuery(Type type, string query)
-		{
-			using var provider = new CSharpCodeProvider();
-			var prettyName = provider.GetTypeOutput(new CodeTypeReference(type));
-			return string.Equals(type.Name, query, StringComparison.OrdinalIgnoreCase) ||
-				string.Equals(prettyName, query, StringComparison.OrdinalIgnoreCase);
-		}
+		bool TypeMatchesQuery(Type type, string query) =>
+			string.Equals(provider.GetTypeOutput(new(type)), query, StringComparison.OrdinalIgnoreCase)
+				|| string.Equals(type.Name, query, StringComparison.OrdinalIgnoreCase);
 	}
 
 	public void Dispose()
