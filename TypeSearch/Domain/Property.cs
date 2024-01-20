@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace TypeSearch.Domain;
 
@@ -17,3 +18,14 @@ public record Property(IMaterializedType DeclaringType, string Name, IMaterializ
 
 public record StaticProperty(IMaterializedType DeclaringType, string Name, IMaterializedType PropertyType) :
 	PropertyBase(DeclaringType, Array.Empty<IMaterializedType>(), Name, PropertyType);
+
+public record IndexProperty(
+		IMaterializedType DeclaringType,
+		string Name,
+		IReadOnlyCollection<IMaterializedType> Parameters,
+		IMaterializedType PropertyType) :
+	PropertyBase(
+		DeclaringType,
+		Parameters.Prepend(DeclaringType).ToArray(),
+		Name,
+		PropertyType);
