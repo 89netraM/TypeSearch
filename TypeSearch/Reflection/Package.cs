@@ -38,12 +38,15 @@ public class Package : IDisposable
 					.Where(type => type.IsPublic)
 					.SelectMany(type => type
 						.GetFields(PublicDeclaredMembers)
+						.Where(f => !f.IsSpecialName)
 						.Select(FieldToFormula)
 						.Concat(type.GetMethods(PublicDeclaredMembers)
+							.Where(m => !m.IsSpecialName)
 							.Select(MethodToFormula))
 						.Concat(type.GetConstructors(PublicDeclaredMembers & ~BindingFlags.DeclaredOnly)
 							.Select(ConstructorToFormula))
 						.Concat(type.GetProperties(PublicDeclaredMembers)
+							.Where(p => !p.IsSpecialName)
 							.Select(PropertyToFormula))));
 
 		static IFormula FieldToFormula(FieldInfo field)
