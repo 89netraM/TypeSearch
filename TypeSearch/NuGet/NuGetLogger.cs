@@ -1,8 +1,8 @@
 ﻿using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using NuGet.Common;
-using INuGetLogger = NuGet.Common.ILogger;
 using IMSLogger = Microsoft.Extensions.Logging.ILogger;
+using INuGetLogger = NuGet.Common.ILogger;
 using LogLevel = NuGet.Common.LogLevel;
 
 namespace TypeSearch.NuGet;
