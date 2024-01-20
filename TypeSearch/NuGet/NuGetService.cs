@@ -7,12 +7,12 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using NuGet.Common;
+using NuGet.Frameworks;
 using NuGet.Packaging;
 using NuGet.Packaging.Core;
 using NuGet.Protocol.Core.Types;
-using INuGetLogger = NuGet.Common.ILogger;
 using IMSLogger = Microsoft.Extensions.Logging.ILogger<TypeSearch.NuGet.NuGetService>;
-using NuGet.Frameworks;
+using INuGetLogger = NuGet.Common.ILogger;
 
 namespace TypeSearch.NuGet;
 

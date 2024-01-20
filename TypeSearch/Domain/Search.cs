@@ -29,7 +29,7 @@ public static class Search
 		{
 			return false;
 		}
-		
+
 		if (ingredients.Count == 0 && from.Count == 0)
 		{
 			return true;

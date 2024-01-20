@@ -17,7 +17,7 @@ public class Package : IDisposable
 
 	private readonly AssemblyLoadContext context;
 
-	private List<IFormula> formulas = new List<IFormula>();
+	private List<IFormula> formulas = [];
 	public IReadOnlyCollection<IFormula> Formulas => formulas;
 
 	public Package(string name)
